@@ -1,8 +1,15 @@
 import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { Observable, ReplaySubject, toArray } from 'rxjs';
+import {
+  catchError,
+  EMPTY,
+  Observable,
+  ReplaySubject,
+  tap,
+  toArray,
+} from 'rxjs';
 import { AppServiceClient, SampleData, SampleDataById } from './proto/sample';
-import { Hero, HeroServiceClient } from './proto/hero';
+import { Hero, HeroById, HeroServiceClient } from './proto/hero';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -35,20 +42,43 @@ export class AppService implements OnModuleInit {
   getHeroDataById(id: string): Observable<Hero> {
     return this.heroService.unaryCall({ id: Number(id) });
   }
+
+  // clientStream(): Observable<Hero> {
+  //   const ids = new ReplaySubject<{ id: number }>();
+  //   ids.next({ id: 1 });
+  //   ids.next({ id: 2 });
+  //   ids.complete();
+
+  //   const stream = this.heroService.clientStreamAsObservable(
+  //     ids.asObservable(),
+  //   );
+
+  //   stream.forEach((hero) => {
+  //     console.log('clientStream', hero);
+  //   });
+
+  //   return stream;
+  // }
+
   clientStream(): Observable<Hero> {
-    const ids = new ReplaySubject<{ id: number }>();
+    const ids = new ReplaySubject<HeroById>();
     ids.next({ id: 1 });
+    ids.next({ id: 2 });
+    ids.complete();
 
     const stream = this.heroService.clientStreamAsObservable(
       ids.asObservable(),
     );
 
-    stream.forEach((hero) => {
-      console.log('clientStream', hero.name);
-    });
-
-    // ids.next({ id: 2 });
-    ids.complete();
+    stream
+      .pipe(
+        tap((hero) => console.log('gRPCクライアントストリーム受信:', hero)),
+        catchError((error) => {
+          console.error('gRPCクライアントストリームエラー:', error);
+          return EMPTY;
+        }),
+      )
+      .subscribe();
 
     return stream;
   }
@@ -56,8 +86,11 @@ export class AppService implements OnModuleInit {
   serverStream(): Observable<Hero> {
     const stream = this.heroService.serverStreamAsObservable({ id: 1 });
 
+    let names: string[] = [];
     stream.forEach((hero) => {
       console.log('serverStream', hero.name);
+      names.push(hero.name);
+      console.log('names', names);
     });
 
     return stream;
@@ -66,15 +99,33 @@ export class AppService implements OnModuleInit {
   bidirectionalStream(): Observable<Hero> {
     const ids = new ReplaySubject<{ id: number }>();
     ids.next({ id: 1 });
-    ids.complete();
+    // ids.complete();
 
     const stream = this.heroService.bidirectionalStreamAsObservable(
       ids.asObservable(),
     );
 
-    stream.forEach((hero) => {
-      console.log('bidirectionalStream', hero.name);
-    });
+    stream
+      .pipe(
+        tap((hero) => {
+          console.log('gRPCクライアントストリーム受信:', hero);
+
+          if (hero.id === 4) {
+            console.log('hero.id === 4');
+            ids.next({ id: 2 });
+          }
+
+          if (hero.id === 2) {
+            console.log('hero.id === 2');
+            ids.complete();
+          }
+        }),
+        catchError((error) => {
+          console.error('gRPCクライアントストリームエラー:', error);
+          return EMPTY;
+        }),
+      )
+      .subscribe();
 
     return stream;
   }

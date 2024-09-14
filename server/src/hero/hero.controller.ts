@@ -23,10 +23,23 @@ export class HeroController {
   clientStreamAsObservable(data$: Observable<HeroById>): Observable<Hero> {
     const hero$ = new Subject<Hero>();
 
+    let names: any[] = [];
     const onNext = (heroById: HeroById) => {
-      console.log('HeroService.ClientStreamAsObservable received &o', heroById);
+      console.log('HeroService.ClientStreamAsObservable received %o', heroById);
+
       const item = this.items.find(({ id }) => id === heroById.id);
-      hero$.next(item);
+
+      if (item) {
+        console.log('HeroService.ClientStreamAsObservable responses %o', item);
+        names.push(item.name);
+        console.log('names', names);
+        hero$.next(item);
+      } else {
+        console.log(
+          'HeroService.ClientStreamAsObservable no item found for %o',
+          heroById,
+        );
+      }
     };
 
     const onComplete = () => {
@@ -36,9 +49,13 @@ export class HeroController {
 
     data$.subscribe({
       next: onNext,
-      error: null,
+      error: (err) => {
+        console.error('HeroService.ClientStreamAsObservable error %o', err);
+        hero$.error(err);
+      },
       complete: onComplete,
     });
+
     return hero$.asObservable();
   }
 
@@ -93,10 +110,15 @@ export class HeroController {
       );
 
       hero$.next(item);
+
+      if (heroById.id === 1) {
+        hero$.next({ id: 4, name: 'chris2' });
+      }
     };
 
     const onComplete = (): void => {
       console.log('HeroService.BidirectionalStreamAsObservable completed');
+      hero$.complete();
     };
 
     data$.subscribe({
