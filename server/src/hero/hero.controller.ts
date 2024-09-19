@@ -1,16 +1,37 @@
-import { Controller } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
 import { Hero, HeroById, HeroServiceControllerMethods } from 'src/proto/hero';
+import { HeroUnaryCallDto } from './hero.dto';
 
 @HeroServiceControllerMethods()
 @Controller('hero')
+@UsePipes(
+  new ValidationPipe({
+    transform: true,
+    exceptionFactory: (errors) => {
+      const errorMessages = errors
+        .map(
+          (error) =>
+            `${error.property}に問題があります: ${Object.values(error.constraints).join(', ')}`,
+        )
+        .join(' ');
+      return new BadRequestException(errorMessages);
+    },
+  }),
+)
 export class HeroController {
   private readonly items: Hero[] = [
     { id: 1, name: 'chris' },
     { id: 2, name: 'michel' },
   ];
 
-  unaryCall(data: HeroById): Hero {
+  unaryCall(@Body() data: HeroUnaryCallDto): Hero {
     console.log('HeroService.UnaryCall received %o', data);
 
     const item = this.items.find(({ id }) => id === data.id);
