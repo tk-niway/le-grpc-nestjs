@@ -7,6 +7,7 @@ import { ReflectionService } from '@grpc/reflection';
 import {
   InterceptingCall,
 } from '@grpc/grpc-js';
+import { ItemsController } from './items/items.controller';
 
 // gRPC interceptorはクライアントのみで利用可能
 function interceptor(options: any, nextCall: any) {
@@ -62,7 +63,7 @@ function interceptor(options: any, nextCall: any) {
       },
     ]),
   ],
-  controllers: [AppController],
+  controllers: [AppController, ItemsController],
   providers: [AppService],
 })
 export class AppModule {}
