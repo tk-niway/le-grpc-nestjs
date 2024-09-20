@@ -7,6 +7,7 @@ service HeroService {
   rpc ClientStreamAsObservable (stream HeroById) returns (Hero);
   rpc ServerStreamAsObservable (HeroById) returns (stream Hero);
   rpc BidirectionalStreamAsObservable (stream HeroById) returns (stream Hero);
+  rpc saveFile (stream FileChunk) returns (FileResponse);
 }
 
 message HeroById {
@@ -16,4 +17,12 @@ message HeroById {
 message Hero {
   int32 id = 1;
   string name = 2;
+}
+
+message FileChunk {
+  bytes data = 1;
+}
+
+message FileResponse {
+  string message = 1;
 }

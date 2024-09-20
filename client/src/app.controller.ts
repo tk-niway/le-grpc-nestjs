@@ -21,6 +21,12 @@ export class AppController {
     return this.appService.clientStream();
   }
 
+  @MessagePattern({ cmd: 'saveFile' })
+  saveFile() {
+    console.log('client : saveFile');
+    return this.appService.saveFile();
+  }
+
   @Get('hero/server-stream')
   serverStream(): Observable<Hero> {
     console.log('serverStream');

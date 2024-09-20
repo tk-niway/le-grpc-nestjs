@@ -15,6 +15,11 @@ export class AppController {
     return this.appService.getClientMessage();
   }
 
+  @Get('save-file')
+  saveFile() {
+    return this.appService.saveFile();
+  }
+
   @Get()
   getHello(): string {
     return this.appService.getHello();

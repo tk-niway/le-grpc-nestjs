@@ -6,8 +6,15 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
-import { Hero, HeroById, HeroServiceControllerMethods } from 'src/proto/hero';
+import {
+  FileChunk,
+  FileResponse,
+  Hero,
+  HeroById,
+  HeroServiceControllerMethods,
+} from 'src/proto/hero';
 import { HeroUnaryCallDto } from './hero.dto';
+import * as fs from 'fs';
 
 @HeroServiceControllerMethods()
 @Controller('hero')
@@ -149,5 +156,30 @@ export class HeroController {
     });
 
     return hero$.asObservable();
+  }
+
+  saveFile(data$: Observable<FileChunk>): Observable<FileResponse> {
+    console.log('saveFile server');
+    const file$ = new Subject<FileResponse>();
+    const writeStream = fs.createWriteStream('output.txt');
+
+    data$.subscribe({
+      next: (chunk: FileChunk) => {
+        console.log('Received file chunk: %o', chunk);
+        writeStream.write(chunk.data);
+      },
+      error: (err: unknown) => {
+        console.error('Error receiving file chunk: %o', err);
+        writeStream.close();
+        file$.error(err);
+      },
+      complete: () => {
+        writeStream.end();
+        console.log('ファイルの書き込みが成功しました');
+        file$.next({ message: 'success' } as FileResponse);
+        file$.complete();
+      },
+    });
+    return file$.asObservable();
   }
 }

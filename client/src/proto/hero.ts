@@ -19,6 +19,14 @@ export interface Hero {
   name: string;
 }
 
+export interface FileChunk {
+  data: Uint8Array;
+}
+
+export interface FileResponse {
+  message: string;
+}
+
 export const HERO_PACKAGE_NAME = "hero";
 
 export interface HeroServiceClient {
@@ -29,6 +37,8 @@ export interface HeroServiceClient {
   serverStreamAsObservable(request: HeroById): Observable<Hero>;
 
   bidirectionalStreamAsObservable(request: Observable<HeroById>): Observable<Hero>;
+
+  saveFile(request: Observable<FileChunk>): Observable<FileResponse>;
 }
 
 export interface HeroServiceController {
@@ -39,6 +49,8 @@ export interface HeroServiceController {
   serverStreamAsObservable(request: HeroById): Observable<Hero>;
 
   bidirectionalStreamAsObservable(request: Observable<HeroById>): Observable<Hero>;
+
+  saveFile(request: Observable<FileChunk>): Promise<FileResponse> | Observable<FileResponse> | FileResponse;
 }
 
 export function HeroServiceControllerMethods() {
@@ -48,7 +60,7 @@ export function HeroServiceControllerMethods() {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("HeroService", method)(constructor.prototype[method], method, descriptor);
     }
-    const grpcStreamMethods: string[] = ["clientStreamAsObservable", "bidirectionalStreamAsObservable"];
+    const grpcStreamMethods: string[] = ["clientStreamAsObservable", "bidirectionalStreamAsObservable", "saveFile"];
     for (const method of grpcStreamMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcStreamMethod("HeroService", method)(constructor.prototype[method], method, descriptor);

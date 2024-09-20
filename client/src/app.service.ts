@@ -9,7 +9,14 @@ import {
   toArray,
 } from 'rxjs';
 import { AppServiceClient, SampleData, SampleDataById } from './proto/sample';
-import { Hero, HeroById, HeroServiceClient } from './proto/hero';
+import {
+  FileChunk,
+  FileResponse,
+  Hero,
+  HeroById,
+  HeroServiceClient,
+} from './proto/hero';
+import * as fs from 'fs';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -128,5 +135,29 @@ export class AppService implements OnModuleInit {
       .subscribe();
 
     return stream;
+  }
+
+  saveFile(): Observable<FileResponse> {
+    console.log('saveFile client:  reading file');
+    const fileStream = fs.createReadStream('../package-lock.json');
+
+    const fileChunk$ = new Observable<FileChunk>((observer) => {
+      fileStream.on('data', (chunk) => {
+        observer.next({
+          data:
+            chunk instanceof Buffer
+              ? new Uint8Array(chunk)
+              : new TextEncoder().encode(chunk),
+        });
+      });
+      fileStream.on('end', () => {
+        observer.complete();
+      });
+      fileStream.on('error', (err) => {
+        observer.error(err);
+      });
+    });
+
+    return this.heroService.saveFile(fileChunk$);
   }
 }
