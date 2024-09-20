@@ -19,6 +19,7 @@ async function bootstrap() {
       },
     },
   });
+  console.log('server http://localhost:5000');
   await app.listen();
 }
 bootstrap();

@@ -1,0 +1,20 @@
+{
+  "name": "nestjs_grpc",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "nest": "nest",
+    "dev": "concurrently -n \"gateway,server,client\"  \"npm run gateway\" \"npm run server\" \"npm run client\"",
+    "server": "npm run start:dev --prefix ./server",
+    "client": "npm run start:dev --prefix ./client",
+    "gateway": "npm run start:dev --prefix ./gateway"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@nestjs/cli": "^10.4.5",
+    "concurrently": "^9.0.1"
+  }
+}
